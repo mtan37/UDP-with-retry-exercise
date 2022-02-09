@@ -12,14 +12,9 @@ int main(int argc, char *argv[]) {
     }
 
     while (1) {
-        printf("waitting.....\n");
         struct sockaddr_in addr;
         char message[BUFFER_SIZE * sizeof(char)];
-        int rc = receive_msg(sd, &addr, message, BUFFER_SIZE);
-        if (rc > 0) {
-            printf("%s", message);
-            char *reply = "haha\n";
-            rc = send_msg(sd, &addr, reply, sizeof(reply));
-        }
+
+        receive_msg(sd, &addr, message, BUFFER_SIZE);
     }
 }

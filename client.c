@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "udp_communication.h"
 
 const int BUFFER_SIZE = 100;
@@ -36,6 +37,14 @@ int main(int argc, char *argv[]) {
     memset(message, 'S', (BUFFER_SIZE - 1)*sizeof(char));
     message[BUFFER_SIZE - 1] = '\0';
     printf("the conent of the message to be sent is %s\n", message);
-    int rc = send_msg(sd, &server_addr, message, BUFFER_SIZE);
-    printf("send message status is %d\n", rc);
+
+    struct timespec begin_time, end_time;
+    int retry_count = 0;
+
+    clock_gettime(CLOCK_REALTIME, &begin_time);
+    if (-1 == send_msg(sd, &server_addr, message, BUFFER_SIZE, &retry_count)) exit(-1);
+    clock_gettime(CLOCK_REALTIME, &end_time);
+    printf("this is to check if the server will account for message waitting time... %ld\n", end_time.tv_sec - begin_time.tv_sec);
+    printf("this is to check if the server will account for message waitting time... %ld\n", end_time.tv_nsec - begin_time.tv_nsec);
+    printf("retry count is %d\n", retry_count);
 }

@@ -43,6 +43,16 @@ int send_ack(int sd, struct sockaddr_in *dest_addr) {
     return sendto(sd, ACK_CONTENT, ACK_LENGTH, 0, (struct sockaddr *) dest_addr, addr_len);
 }
 
+/**
+ * @brief Waitting for an acknowledgement packet from the other side. 
+ * Note this assumes that this function is used execlusive by the client, and 
+ * the server will never send the client anything except ack....
+ * 
+ * @param sd 
+ * @param expected_src_addr 
+ * @param timeout 
+ * @return int 
+ */
 int receive_ack(int sd, struct sockaddr_in *expected_src_addr, struct timeval timeout) {
     struct sockaddr_in src_addr;
     int addr_len = sizeof(struct sockaddr_in);
@@ -50,6 +60,7 @@ int receive_ack(int sd, struct sockaddr_in *expected_src_addr, struct timeval ti
    
     timeout.tv_sec = ACK_TIMEOUT;
     setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+    // should could add something to check the content of the ack TODO
     recvfrom(sd, buffer, ACK_LENGTH, 0, (struct sockaddr *) &src_addr, (socklen_t *) &addr_len);
     timeout.tv_sec = 0;
     setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
@@ -61,24 +72,24 @@ int receive_ack(int sd, struct sockaddr_in *expected_src_addr, struct timeval ti
  * @brief Modified from Andrea and Ramzi's text book OPERATING
 SYSTEMS, Figure 48.2... 
  */
-int send_msg(int sd, struct sockaddr_in *dest_addr, char *buffer, int msg_len) {
+int send_msg(int sd, struct sockaddr_in *dest_addr, char *buffer, int msg_len, int*retry_count) {
     int addr_len = sizeof(struct sockaddr_in);
     if (0 > sendto(sd, buffer, msg_len, 0, (struct sockaddr *) dest_addr, addr_len)) {
         exit(1);
     }
 
-    int retry = 0;
+    (*retry_count) = 0;
     int receive_status;
     // set the timeout structure
     struct timeval timeout;
     timeout.tv_sec = ACK_TIMEOUT;
     timeout.tv_usec = 0;  
     while (-1 == (receive_status = receive_ack(sd, dest_addr, timeout))) {
-        printf("timeout for acknoeldgment with retry %d\n", retry);
         // retry send_ack for five times before timeout
-        retry++;
-        if (5 <= retry) return -1;
+        (*retry_count)++;
+        if (5 <= *retry_count) return -1;
     }
+    
     return receive_status;
 }
 
