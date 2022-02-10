@@ -3,7 +3,7 @@
 #include <time.h>
 #include "udp_communication.h"
 
-const int BUFFER_SIZE = 65527; // MAX SIZE
+const int BUFFER_SIZE = 65507; // MAX SIZE
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -23,12 +23,11 @@ int main(int argc, char *argv[]) {
     int r, drop_message;
     while (1) {
         struct sockaddr_in addr;
-        char message[BUFFER_SIZE * sizeof(char)];
+        char message[BUFFER_SIZE];
 
         r = rand() % 100;
         drop_message = 0;
 
-        printf("r value is %d\n", r);
         if (r < drop_percent) {
             drop_message = 1;
         }

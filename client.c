@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/socket.h>
 #include "udp_communication.h"
 
-const int BUFFER_SIZE = 65527; // MAX SIZE
+const int BUFFER_SIZE = 9000; // MAX SIZE in byte
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
@@ -31,10 +32,10 @@ int main(int argc, char *argv[]) {
     server_addr.sin_addr.s_addr = inet_addr(host);
 
     // send the message
-    char message[BUFFER_SIZE * sizeof(char)];
+    char message[BUFFER_SIZE];
 
     // fill in the message with character s
-    memset(message, '0', (BUFFER_SIZE - 1)*sizeof(char));
+    memset(message, '0', (BUFFER_SIZE - 1));
     message[BUFFER_SIZE - 1] = '\0';
 
     struct timespec begin_time, end_time;
@@ -46,7 +47,6 @@ int main(int argc, char *argv[]) {
         printf("send message failed\n");
         exit(-1);
     }
-     printf("send message failed\n");
     clock_gettime(CLOCK_REALTIME, &end_time);
 
     // compute the time
