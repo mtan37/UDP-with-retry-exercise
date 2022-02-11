@@ -11,6 +11,7 @@ const size_t BUFFER_SIZE = 64 * 1024; // Make the buffer size 64k Byte
 const size_t MAX_PACKET_SIZE = 32 * 1024;
 const unsigned int ACK_TIMEOUT = 1;// in second
 const unsigned S_TO_NS = 1000000000;
+const unsgined B_PER_MB = 1048576; // byte per megabyte
 
 /**
  * @brief Code staright from https://stackoverflow.com/questions/53708076/what-is-the-proper-way-to-use-clock-gettime... 
@@ -126,7 +127,7 @@ int main(int argc, char *argv[]) {
     // compute latency
     if (packet_sent > 0){
         double ns_in_s= nsec_passed / S_TO_NS;
-        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + ns_in_s);
+        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + ns_in_s) / B_PER_MB;
         printf("packet_sent: %lld\n", packet_sent);
         printf("sec_passed: %lld\n", sec_passed);
         printf("ns_in_s: %f\n", ns_in_s);
@@ -134,7 +135,7 @@ int main(int argc, char *argv[]) {
         printf("*********Latency*********\n");
         printf("*********%lld s and %lld ns*********\n", sec_passed/(packet_sent * 2), nsec_passed/(packet_sent * 2));
         printf("*********Throughput*********\n");
-        printf("*********%f B/s*********\n", throughput);
+        printf("*********%f MB/s*********\n", throughput);
     } else {
         printf("No packets were sent\n");
     }
