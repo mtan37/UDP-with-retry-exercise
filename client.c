@@ -104,12 +104,12 @@ int main(int argc, char *argv[]) {
 
     // compute latency
     if (packet_sent > 0){
-        nsec_passed =  nsec_passed/ (packet_sent * 2);
-        sec_passed =  sec_passed/ (packet_sent * 2);
+        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + nsec_passed/S_TO_NS);
+
         printf("*********Latency*********\n");
-        printf("*********%ld s and %ld ns*********\n", sec_passed, nsec_passed);
+        printf("*********%ld s and %ld ns*********\n", sec_passed/ (packet_sent * 2), nsec_passed/ (packet_sent * 2));
         printf("*********Throughput*********\n");
-        printf("*********%ld s and %ld ns*********\n", sec_passed, nsec_passed);
+        printf("*********%f B/s*********\n", throughput);
     } else {
         printf("No packets were sent\n");
     }
