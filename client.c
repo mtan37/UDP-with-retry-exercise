@@ -80,8 +80,9 @@ int main(int argc, char *argv[]) {
             exit(-1);
         }
         clock_gettime(CLOCK_REALTIME, &end_time);
-        printf("message sent, with a re-try count of %d\n", retry_count);
+
         if (test_reliability_flag == 1) {
+            printf("message sent, with a re-try count of %d\n", retry_count);
             printf("message content: %s\n", message);
             // append message content
             message_size += 1;
