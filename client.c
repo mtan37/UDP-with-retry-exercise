@@ -11,8 +11,25 @@ const size_t BUFFER_SIZE = 64 * 1024; // Make the buffer size 64k Byte
 const size_t MAX_PACKET_SIZE = 32 * 1024;
 const unsigned int ACK_TIMEOUT = 1;// in second
 const unsigned S_TO_NS = 1000000000;
-const unsigned MS_TO_NS = 1000000;
-const unsigned S_TO_MS = 1000000;
+
+/**
+ * @brief Code staright from https://stackoverflow.com/questions/53708076/what-is-the-proper-way-to-use-clock-gettime... 
+ */
+void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
+{
+    td->tv_nsec = t2.tv_nsec - t1.tv_nsec;
+    td->tv_sec  = t2.tv_sec - t1.tv_sec;
+    if (td->tv_sec > 0 && td->tv_nsec < 0)
+    {
+        td->tv_nsec += S_TO_NS;
+        td->tv_sec--;
+    }
+    else if (td->tv_sec < 0 && td->tv_nsec > 0)
+    {
+        td->tv_nsec -= S_TO_NS;
+        td->tv_sec++;
+    }
+}
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -60,7 +77,7 @@ int main(int argc, char *argv[]) {
         message[message_size - 1] = '\0';
     }
 
-    struct timespec begin_time, end_time;
+    struct timespec begin_time, end_time, elapsed;
 
     // set the timeout structure
     struct timeval timeout;
@@ -69,7 +86,7 @@ int main(int argc, char *argv[]) {
     setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 
     int i, retry_count;
-    unsigned long long sec_passed = 0, msec_passed = 0, nsec_passed = 0, packet_sent = 0;
+    unsigned long long sec_passed = 0, nsec_passed = 0, packet_sent = 0;
 
     for (i = 0; i < packet_count; i++) {
 
@@ -92,18 +109,14 @@ int main(int argc, char *argv[]) {
         }
         // compute the time
         if (retry_count == 0){
-            nsec_passed += end_time.tv_nsec - begin_time.tv_nsec;
-            sec_passed += end_time.tv_sec - begin_time.tv_sec;
+            sub_timespec(begin_time, end_time, &elapsed);
+            nsec_passed += elapsed.tv_nsec;
+            sec_passed += elapsed.tv_sec;
             packet_sent += 1;
 
-            if (nsec_passed > MS_TO_NS) {
-                msec_passed += 1;
-                nsec_passed -= MS_TO_NS;
-            }
-
-            if (msec_passed > S_TO_MS) {
+            if (nsec_passed > S_TO_NS) {
                 sec_passed += 1;
-                msec_passed -= S_TO_MS;
+                nsec_passed -= S_TO_NS;
             }
         }
     }
@@ -112,9 +125,11 @@ int main(int argc, char *argv[]) {
 
     // compute latency
     if (packet_sent > 0){
-        double ns_in_ms = nsec_passed / MS_TO_NS;
-        double ms_in_s= (msec_passed + ns_in_ms) / S_TO_MS;
-        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + ms_in_s);
+        double ns_in_s= nsec_passed / S_TO_NS;
+        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + ns_in_s);
+        printf("packet_sent: %lld\n", packet_sent);
+        printf("sec_passed: %lld\n", sec_passed);
+        printf("ns_in_s: %f\n", ns_in_s);
 
         printf("*********Latency*********\n");
         printf("*********%lld s and %lld ns*********\n", sec_passed/(packet_sent * 2), nsec_passed/(packet_sent * 2));
