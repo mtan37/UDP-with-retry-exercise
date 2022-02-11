@@ -79,6 +79,7 @@ int main(int argc, char *argv[]) {
     }
 
     struct timespec begin_time, end_time, elapsed;
+    double latency = -1; // latency in ns
 
     // set the timeout structure
     struct timeval timeout;
@@ -119,6 +120,11 @@ int main(int argc, char *argv[]) {
                 sec_passed += 1;
                 nsec_passed -= S_TO_NS;
             }
+
+            // check latency, get the smallest value
+            if (latency < 0 || (elapsed.tv_sec < 0 && elapsed.tv_nsec < (latency * 2))) {
+                latency = elapsed.tv_nsec/2;
+            }
         }
     }
 
@@ -133,7 +139,7 @@ int main(int argc, char *argv[]) {
         printf("ns_in_s: %f\n", ns_in_s);
 
         printf("*********Latency*********\n");
-        printf("*********%lld ns*********\n", (nsec_passed + sec_passed * S_TO_NS )/(packet_sent * 2));
+        printf("*********%f ns*********\n", latency);
         printf("*********Throughput*********\n");
         printf("*********%f MB/s*********\n", throughput);
     } else {
