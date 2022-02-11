@@ -11,7 +11,7 @@ const size_t BUFFER_SIZE = 64 * 1024; // Make the buffer size 64k Byte
 const size_t MAX_PACKET_SIZE = 32 * 1024;
 const unsigned int ACK_TIMEOUT = 1;// in second
 const unsigned S_TO_NS = 1000000000;
-const unsgined B_PER_MB = 1048576; // byte per megabyte
+const unsigned B_PER_MB = 1048576; // byte per megabyte
 
 /**
  * @brief Code staright from https://stackoverflow.com/questions/53708076/what-is-the-proper-way-to-use-clock-gettime... 
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
         printf("ns_in_s: %f\n", ns_in_s);
 
         printf("*********Latency*********\n");
-        printf("*********%lld s and %lld ns*********\n", sec_passed/(packet_sent * 2), nsec_passed/(packet_sent * 2));
+        printf("*********%lld ns*********\n", (nsec_passed + sec_passed * S_TO_NS )/(packet_sent * 2));
         printf("*********Throughput*********\n");
         printf("*********%f MB/s*********\n", throughput);
     } else {
