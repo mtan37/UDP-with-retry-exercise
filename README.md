@@ -1,5 +1,15 @@
 # UDP-with-retry-exercise
 
+## Usage
+```
+./server <port> <message_drop_percentage> [-d]
+-d - turn on to print server debug message
+
+./client <server IP> <server port> <packet size(in KB)> <packet count> [-R]
+-R - turn on to tell client that we are trying to test reliability... a increasing sequence of 0s will be sent
+```
+
+
 ## Get latency and throughput
 First execute `./server <port> 0`
 
