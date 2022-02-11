@@ -1,22 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include "udp_communication.h"
 
-const int BUFFER_SIZE = 65507; // MAX SIZE
+const int BUFFER_SIZE = 64 * 1024; // Make the buffer size 64k Byte
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("usage: ./server <message drop percentage>\n");
+    if (argc < 3) {
+        printf("usage: ./server <port> <message drop percentage> -d\n");
         exit(-1);
     }
 
     char *ptr;
-    int drop_percent = strtol(argv[1], &ptr, 10) % 100;
+    int server_port = strtol(argv[1], &ptr, 10);
+    int drop_percent = strtol(argv[2], &ptr, 10) % 100;
     printf("lol, server program starts~\n");
-    int sd = open_udp_socket(9999, NULL);
+    int sd = open_udp_socket(server_port, NULL, 1);
     if (sd == -1) {
         exit(-1);
+    }
+
+    int print_debug_message = 0;
+    // check if debug flag is on
+    if (argc > 2) {
+        if (strcmp(argv[2], "-d") == 0) {
+            print_debug_message = 1;
+        }
     }
 
     srand(time(0));
@@ -33,5 +43,13 @@ int main(int argc, char *argv[]) {
         }
 
         receive_msg(sd, &addr, message, BUFFER_SIZE, drop_message);
+
+        if (print_debug_message == 1) {
+            if (drop_message == 1) {
+                printf("Dropped message %s\n", message);
+            } else {
+                printf("Sent ack for message %s\n", message);
+            }
+        }
     }
 }
