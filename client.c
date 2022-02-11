@@ -7,10 +7,12 @@
 #include <unistd.h>
 #include "udp_communication.h"
 
-const size_t BUFFER_SIZE = 32 * 1024; // Make the buffer size 64k Byte
-const size_t MAX_PACKET_SIZE = 16 * 1024;
+const size_t BUFFER_SIZE = 64 * 1024; // Make the buffer size 64k Byte
+const size_t MAX_PACKET_SIZE = 32 * 1024;
 const unsigned int ACK_TIMEOUT = 1;// in second
 const unsigned S_TO_NS = 1000000000;
+const unsigned MS_TO_NS = 1000000;
+const unsigned S_TO_MS = 1000000;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -67,7 +69,7 @@ int main(int argc, char *argv[]) {
     setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 
     int i, retry_count, packet_sent = 0;
-    unsigned long sec_passed = 0, nsec_passed = 0;
+    unsigned long long sec_passed = 0, msec_passed = 0, nsec_passed = 0;
 
     for (i = 0; i < packet_count; i++) {
 
@@ -93,9 +95,14 @@ int main(int argc, char *argv[]) {
             sec_passed += end_time.tv_sec - begin_time.tv_sec;
             packet_sent += 1;
 
-            if (nsec_passed > S_TO_NS) {
+            if (nsec_passed > MS_TO_NS) {
+                msec_passed += 1;
+                nsec_passed -= MS_TO_NS;
+            }
+
+            if (msec_passed > S_TO_MS) {
                 sec_passed += 1;
-                nsec_passed -= S_TO_NS;
+                msec_passed -= S_TO_MS;
             }
         }
     }
@@ -104,10 +111,11 @@ int main(int argc, char *argv[]) {
 
     // compute latency
     if (packet_sent > 0){
-        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + nsec_passed/S_TO_NS);
+        double ns_in_s = nsec_passed / S_TO_NS;
+        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + ns_in_s);
 
         printf("*********Latency*********\n");
-        printf("*********%ld s and %ld ns*********\n", sec_passed/ (packet_sent * 2), nsec_passed/ (packet_sent * 2));
+        printf("*********%lld s and %lld ns*********\n", sec_passed/(packet_sent * 2), nsec_passed/(packet_sent * 2));
         printf("*********Throughput*********\n");
         printf("*********%f B/s*********\n", throughput);
     } else {
