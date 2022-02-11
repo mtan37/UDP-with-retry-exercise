@@ -68,8 +68,8 @@ int main(int argc, char *argv[]) {
     timeout.tv_usec = 0;
     setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 
-    int i, retry_count, packet_sent = 0;
-    unsigned long long sec_passed = 0, msec_passed = 0, nsec_passed = 0;
+    int i, retry_count;
+    unsigned long long sec_passed = 0, msec_passed = 0, nsec_passed = 0, packet_sent = 0;
 
     for (i = 0; i < packet_count; i++) {
 
@@ -112,8 +112,9 @@ int main(int argc, char *argv[]) {
 
     // compute latency
     if (packet_sent > 0){
-        double ns_in_s = nsec_passed / S_TO_NS;
-        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + ns_in_s);
+        double ns_in_ms = nsec_passed / MS_TO_NS;
+        double ms_in_s= (msec_passed + ns_in_ms) / S_TO_MS;
+        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + ms_in_s);
 
         printf("*********Latency*********\n");
         printf("*********%lld s and %lld ns*********\n", sec_passed/(packet_sent * 2), nsec_passed/(packet_sent * 2));
