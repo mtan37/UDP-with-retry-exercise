@@ -8,10 +8,12 @@
 #include "udp_communication.h"
 
 const size_t BUFFER_SIZE = 64 * 1024; // Make the buffer size 64k Byte
-const size_t MAX_PACKET_SIZE = 32 * 1024;
+const size_t MAX_PACKET_SIZE_K = 32;
+const unsigned long KB_TO_B = 1024;
+const size_t MAX_PACKET_SIZE = MAX_PACKET_SIZE_K * KB_TO_B;
 const unsigned int ACK_TIMEOUT = 1;// in second
-const unsigned S_TO_NS = 1000000000;
-const unsigned B_PER_MB = 1048576; // byte per megabyte
+const unsigned long S_TO_NS = 1000000000;
+const unsigned long B_PER_MB = 1048576; // byte per megabyte
 
 /**
  * @brief Code staright from https://stackoverflow.com/questions/53708076/what-is-the-proper-way-to-use-clock-gettime... 
@@ -33,8 +35,8 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 4) {
-        printf("usage: ./client <server hostname> <port> <packet count> -R\n");
+    if (argc < 5) {
+        printf("usage: ./client <server hostname> <port> <packet size in k> <packet count> -R\n");
         exit(-1);
     }
 
@@ -42,7 +44,13 @@ int main(int argc, char *argv[]) {
     // take the port number of the server that is listening 
     char *ptr;
     int remote_port = strtol(argv[2], &ptr, 10);
-    int packet_count = strtol(argv[3], &ptr, 10);
+    int packet_size_k = strtol(argv[3], &ptr, 10);
+    int packet_count = strtol(argv[4], &ptr, 10);
+
+    if (packet_size_k > MAX_PACKET_SIZE_K) {
+        printf("packet size can't exceed 32k!!!!\n");
+        exit(-1);
+    }
 
     int test_reliability_flag = 0;
     if (argc > 4 && strcmp(argv[4], "-R") == 0) {
@@ -67,7 +75,7 @@ int main(int argc, char *argv[]) {
     int message_size = 0;
 
     if (test_reliability_flag == 0) {
-        message_size = MAX_PACKET_SIZE;
+        message_size = packet_size_k * KB_TO_B;
         // send max size packet
         // memset(message, '0', message_size);
         message[message_size - 1] = '\0';
@@ -122,7 +130,7 @@ int main(int argc, char *argv[]) {
             }
 
             // check latency, get the smallest value
-            if (latency < 0 || (elapsed.tv_sec < 0 && elapsed.tv_nsec < (latency * 2))) {
+            if (latency < 0 || (elapsed.tv_sec <= 0 && elapsed.tv_nsec < (latency * 2))) {
                 latency = elapsed.tv_nsec/2;
             }
         }
@@ -132,11 +140,8 @@ int main(int argc, char *argv[]) {
 
     // compute latency
     if (packet_sent > 0){
-        double ns_in_s= nsec_passed / S_TO_NS;
-        double throughput = packet_sent * MAX_PACKET_SIZE / (sec_passed + ns_in_s) / B_PER_MB;
-        printf("packet_sent: %lld\n", packet_sent);
-        printf("sec_passed: %lld\n", sec_passed);
-        printf("ns_in_s: %f\n", ns_in_s);
+        long double ns_in_s= nsec_passed / S_TO_NS;
+        double throughput = packet_sent * message_size / (sec_passed + ns_in_s) / B_PER_MB;
 
         printf("*********Latency*********\n");
         printf("*********%f ns*********\n", latency);
