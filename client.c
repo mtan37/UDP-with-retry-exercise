@@ -117,22 +117,19 @@ int main(int argc, char *argv[]) {
             message[message_size - 2] = '0';
             message[message_size - 1] = '\0';
         }
-        // compute the time
-        if (retry_count == 0){
-            sub_timespec(begin_time, end_time, &elapsed);
-            nsec_passed += elapsed.tv_nsec;
-            sec_passed += elapsed.tv_sec;
-            packet_sent += 1;
+        sub_timespec(begin_time, end_time, &elapsed);
+        nsec_passed += elapsed.tv_nsec;
+        sec_passed += elapsed.tv_sec;
+        packet_sent += 1;
 
-            if (nsec_passed > S_TO_NS) {
-                sec_passed += 1;
-                nsec_passed -= S_TO_NS;
-            }
+        if (nsec_passed > S_TO_NS) {
+            sec_passed += 1;
+            nsec_passed -= S_TO_NS;
+        }
 
-            // check latency, get the smallest value
-            if (latency < 0 || (elapsed.tv_sec <= 0 && elapsed.tv_nsec < (latency * 2))) {
-                latency = elapsed.tv_nsec/2;
-            }
+        // check latency, get the smallest value
+        if (latency < 0 || (elapsed.tv_sec <= 0 && elapsed.tv_nsec < (latency * 2))) {
+            latency = elapsed.tv_nsec/2;
         }
     }
 
