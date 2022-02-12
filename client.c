@@ -11,7 +11,7 @@ const size_t BUFFER_SIZE = 64 * 1024; // Make the buffer size 64k Byte
 const size_t MAX_PACKET_SIZE_K = 32;
 const unsigned long KB_TO_B = 1024;
 const size_t MAX_PACKET_SIZE = MAX_PACKET_SIZE_K * KB_TO_B;
-const unsigned int ACK_TIMEOUT = 1;// in second
+const unsigned int ACK_TIMEOUT_MS = 500;// in second
 const unsigned long S_TO_NS = 1000000000;
 const unsigned long B_PER_MB = 1048576; // byte per megabyte
 
@@ -91,8 +91,8 @@ int main(int argc, char *argv[]) {
 
     // set the timeout structure
     struct timeval timeout;
-    timeout.tv_sec = ACK_TIMEOUT;
-    timeout.tv_usec = 0;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = ACK_TIMEOUT_MS;
     setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 
     int i, retry_count;
