@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
 
     int print_debug_message = 0;
     // check if debug flag is on
-    if (argc > 2) {
-        if (strcmp(argv[2], "-d") == 0) {
+    if (argc > 3) {
+        if (strcmp(argv[3], "-d") == 0) {
             print_debug_message = 1;
         }
     }
