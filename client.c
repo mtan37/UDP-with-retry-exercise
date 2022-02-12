@@ -53,7 +53,8 @@ int main(int argc, char *argv[]) {
     }
 
     int test_reliability_flag = 0;
-    if (argc > 4 && strcmp(argv[4], "-R") == 0) {
+    if (argc > 5 && strcmp(argv[5], "-R") == 0) {
+        printf("reliability flag is set. Packet size arg will be ignored\n");
         test_reliability_flag = 1;
     }
 
@@ -87,7 +88,7 @@ int main(int argc, char *argv[]) {
     }
 
     struct timespec begin_time, end_time, elapsed;
-    double latency = -1; // latency in ns
+    double round_trip = -1; // round trip in ns
 
     // set the timeout structure
     struct timeval timeout;
@@ -101,12 +102,12 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < packet_count; i++) {
 
         retry_count = 0;
-        clock_gettime(CLOCK_REALTIME, &begin_time);
+        clock_gettime(CLOCK_MONOTONIC, &begin_time);
         if (-1 == send_msg(sd, &server_addr, message, message_size, &retry_count)) {
             printf("send message failed\n");
             exit(-1);
         }
-        clock_gettime(CLOCK_REALTIME, &end_time);
+        clock_gettime(CLOCK_MONOTONIC, &end_time);
 
         if (test_reliability_flag == 1) {
             printf("message sent, with a re-try count of %d\n", retry_count);
@@ -127,21 +128,22 @@ int main(int argc, char *argv[]) {
             nsec_passed -= S_TO_NS;
         }
 
-        // check latency, get the smallest value
-        if (latency < 0 || (elapsed.tv_sec <= 0 && elapsed.tv_nsec < (latency * 2))) {
-            latency = elapsed.tv_nsec/2;
+        // check round_trip, get the smallest value
+        if (round_trip < 0 || (elapsed.tv_sec <= 0 && elapsed.tv_nsec < round_trip)) {
+            round_trip = elapsed.tv_nsec;
         }
     }
 
     close(sd);
 
-    // compute latency
     if (packet_sent > 0){
         long double ns_in_s= nsec_passed / S_TO_NS;
         double throughput = packet_sent * message_size / (sec_passed + ns_in_s) / B_PER_MB;
-
-        printf("*********Latency*********\n");
-        printf("*********%f ns*********\n", latency);
+        double avg_round_trip = (sec_passed * S_TO_NS + nsec_passed) / packet_sent;
+        printf("*********Min Roundtrip*********\n");
+        printf("*********%f ns*********\n", round_trip);
+        printf("*********Avg Roundtrip*********\n");
+        printf("*********%f ns*********\n", avg_round_trip);
         printf("*********Throughput*********\n");
         printf("*********%f MB/s*********\n", throughput);
     } else {
