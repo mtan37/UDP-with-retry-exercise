@@ -38,9 +38,9 @@ int open_udp_socket(int port, char *toaddr, int bind_to_port) {
     return sd;
 }
 
-int send_ack(int sd, struct sockaddr_in *dest_addr) {
+int send_ack(int sd, struct sockaddr_in *dest_addr, int message_id) {
     int addr_len = sizeof(struct sockaddr_in);
-    return sendto(sd, ACK_CONTENT, ACK_LENGTH, 0, (struct sockaddr *) dest_addr, addr_len);
+    return sendto(sd, &message_id, sizeof(int), 0, (struct sockaddr *) dest_addr, addr_len);
 }
 
 /**
@@ -64,6 +64,8 @@ int receive_ack(int sd, struct sockaddr_in *expected_src_addr, int message_id) {
         return_status = -1;
     }
 
+    printf("message id: %d\n", message_id);
+    printf("content in buffer %d\n", ((int *)buffer)[0]);
     if (message_id != ((int *)buffer)[0]) {
         return_status = -1;
     }
@@ -108,7 +110,7 @@ int receive_msg(int sd, struct sockaddr_in *src_addr, void *buffer, size_t buffe
         0, (struct sockaddr *) src_addr, (socklen_t *) &addr_len)) {
             return -1;
     }
-    if (drop_message == 0) return send_ack(sd, src_addr);
+    if (drop_message == 0) return send_ack(sd, src_addr, ((int *)buffer)[0]);
 
     return -1;
 }

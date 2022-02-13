@@ -105,6 +105,7 @@ int main(int argc, char *argv[]) {
 
         retry_count = 0;
         ((int *)message)[0] = packet_sent;// use packet_sent count as message id
+        printf("message id: %d\n", ((int *)message)[0]);
         clock_gettime(CLOCK_MONOTONIC, &begin_time);
         if (-1 == send_msg(sd, &server_addr, message, message_size, &retry_count)) {
             printf("send message failed\n");
