@@ -9,7 +9,7 @@
 
 const char* ACK_CONTENT = "I am back~";
 const size_t ACK_LENGTH = sizeof(ACK_CONTENT);
-const int MAX_RETRY_COUNT = 10;
+const int MAX_RETRY_COUNT = 100;
 
 int open_udp_socket(int port, char *toaddr, int bind_to_port) {
     printf("open udp socket to listen for requets at port %d\n", port);
