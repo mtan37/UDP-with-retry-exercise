@@ -12,7 +12,6 @@ const size_t ACK_LENGTH = sizeof(ACK_CONTENT);
 const int MAX_RETRY_COUNT = 100;
 
 int open_udp_socket(int port, char *toaddr, int bind_to_port) {
-    printf("open udp socket to listen for requets at port %d\n", port);
     int sd;
 
     if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
@@ -64,8 +63,6 @@ int receive_ack(int sd, struct sockaddr_in *expected_src_addr, int message_id) {
         return_status = -1;
     }
 
-    printf("message id: %d\n", message_id);
-    printf("content in buffer %d\n", ((int *)buffer)[0]);
     if (message_id != ((int *)buffer)[0]) {
         return_status = -1;
     }

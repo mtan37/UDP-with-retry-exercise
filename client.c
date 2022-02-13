@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
     int message_size = 0;
 
     message_size = packet_size_k * KB_TO_B;
+    printf("message_size %d\n", message_size);
     // send max size packet
     memset(message, '0', message_size);
     message[message_size - 1] = '\0';
@@ -104,7 +105,6 @@ int main(int argc, char *argv[]) {
 
         retry_count = 0;
         ((int *)message)[0] = packet_sent;// use packet_sent count as message id
-        printf("message id: %d\n", ((int *)message)[0]);
         clock_gettime(CLOCK_MONOTONIC, &begin_time);
         if (-1 == send_msg(sd, &server_addr, message, message_size, &retry_count)) {
             printf("send message failed\n");
