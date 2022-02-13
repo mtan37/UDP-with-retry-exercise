@@ -78,7 +78,6 @@ int main(int argc, char *argv[]) {
         return -1;
     in_addr = (struct in_addr *) host_entry->h_addr;
     server_addr.sin_addr = *in_addr;
-    server_addr.sin_addr.s_addr = inet_addr(host);
 
     // send the message
     char message[BUFFER_SIZE];
