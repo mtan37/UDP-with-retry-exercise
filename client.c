@@ -5,6 +5,7 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <netdb.h>
 #include "udp_communication.h"
 
 const size_t BUFFER_SIZE = 64 * 1024; // Make the buffer size 64k Byte
@@ -69,6 +70,14 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port=htons(remote_port);
+    printf("%s\n", host);
+    
+    struct in_addr *in_addr;
+    struct hostent *host_entry;
+    if ((host_entry = gethostbyname(host)) == NULL)
+        return -1;
+    in_addr = (struct in_addr *) host_entry->h_addr;
+    server_addr.sin_addr = *in_addr;
     server_addr.sin_addr.s_addr = inet_addr(host);
 
     // send the message
