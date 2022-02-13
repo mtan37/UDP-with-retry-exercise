@@ -83,17 +83,10 @@ int main(int argc, char *argv[]) {
     char message[BUFFER_SIZE];
     int message_size = 0;
 
-    if (test_reliability_flag == 0) {
-        message_size = packet_size_k * KB_TO_B;
-        // send max size packet
-        // memset(message, '0', message_size);
-        message[message_size - 1] = '\0';
-    } else {
-        message_size = 2;
-        // send max size packet
-        memset(message, '0', message_size);
-        message[message_size - 1] = '\0';
-    }
+    message_size = packet_size_k * KB_TO_B;
+    // send max size packet
+    memset(message, '0', message_size);
+    message[message_size - 1] = '\0';
 
     struct timespec begin_time, end_time, elapsed;
     double round_trip = -1; // round trip in ns
@@ -110,6 +103,7 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < packet_count; i++) {
 
         retry_count = 0;
+        ((int *)message)[0] = packet_sent;// use packet_sent count as message id
         clock_gettime(CLOCK_MONOTONIC, &begin_time);
         if (-1 == send_msg(sd, &server_addr, message, message_size, &retry_count)) {
             printf("send message failed\n");
@@ -119,13 +113,9 @@ int main(int argc, char *argv[]) {
 
         if (test_reliability_flag == 1) {
             printf("message sent, with a re-try count of %d\n", retry_count);
-            printf("message content: %s\n", message);
-            // append message content
-            message_size += 1;
-            // send max size packet
-            message[message_size - 2] = '0';
-            message[message_size - 1] = '\0';
+            printf("message id: %d\n", ((int *)message)[0]);
         }
+
         sub_timespec(begin_time, end_time, &elapsed);
         nsec_passed += elapsed.tv_nsec;
         sec_passed += elapsed.tv_sec;

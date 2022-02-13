@@ -53,7 +53,7 @@ int send_ack(int sd, struct sockaddr_in *dest_addr) {
  * @param timeout 
  * @return int 
  */
-int receive_ack(int sd, struct sockaddr_in *expected_src_addr) {
+int receive_ack(int sd, struct sockaddr_in *expected_src_addr, int message_id) {
     struct sockaddr_in src_addr;
     int addr_len = sizeof(struct sockaddr_in);
     char buffer[ACK_LENGTH];
@@ -63,8 +63,11 @@ int receive_ack(int sd, struct sockaddr_in *expected_src_addr) {
     if (0 > recvfrom(sd, buffer, ACK_LENGTH, 0, (struct sockaddr *) &src_addr, (socklen_t *) &addr_len)) {
         return_status = -1;
     }
-    // timeout.tv_sec = 0;
-    // setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+
+    if (message_id != ((int *)buffer)[0]) {
+        return_status = -1;
+    }
+
     return return_status;
 }
 
@@ -87,7 +90,7 @@ int send_msg(int sd, struct sockaddr_in *dest_addr, void *buffer, size_t msg_len
             exit(1);
         }
 
-        if (-1 == receive_ack(sd, dest_addr)) {
+        if (-1 == receive_ack(sd, dest_addr, ((int *)buffer)[0])) {
             (*retry_count)++;
             if (MAX_RETRY_COUNT <= *retry_count) return -1;
         } else {
